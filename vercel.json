@@ -3,21 +3,9 @@
     {
       "src": "frontend/",
       "use": "@vercel/static"
-    },
-    {
-      "src": "backend/main.py",
-      "use": "@vercel/python",
-      "config": {
-        "runtime": "python3.11",
-        "handler": "main.py"
-      }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/main.py"
-    },
     {
       "handle": "filesystem"
     },
