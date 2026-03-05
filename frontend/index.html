@@ -784,54 +784,13 @@
             <div class="header-line"></div>
         </header>
 
-        <div id="auth" class="auth-card">
-            <div class="auth-tabs">
-                <button class="auth-tab active" data-tab="login">登录</button>
-                <button class="auth-tab" data-tab="register">注册</button>
-            </div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="loginUsername" placeholder="请输入用户名" required>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <input type="password" id="loginPassword" placeholder="请输入密码" required>
-                </div>
-                <button type="submit" class="btn btn-primary">登 录</button>
-            </form>
-            
-            <form id="registerForm" style="display: none;">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="regUsername" placeholder="至少3个字符" required minlength="3">
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <input type="password" id="regPassword" placeholder="至少6个字符" required minlength="6">
-                    <div class="password-strength" id="passwordStrength">
-                        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-                        <span class="strength-text" id="strengthText"></span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>确认密码</label>
-                    <input type="password" id="regPasswordConfirm" placeholder="请再次输入密码" required>
-                </div>
-                <button type="submit" class="btn btn-primary">注 册</button>
-            </form>
+        <div id="auth" class="auth-card" style="display: none;">
+            <!-- 登录已移除，数据本地存储 -->
         </div>
 
         <div id="app" class="app">
             <div class="app-layout">
                 <aside class="sidebar">
-                    <div class="user-section">
-                        <div class="user-avatar" id="userAvatar">U</div>
-                        <div class="user-name" id="username">用户</div>
-                        <div class="user-role" id="userRole">USER</div>
-                    </div>
-
                     <div class="stats-grid">
                         <div class="stat-item">
                             <div class="stat-number" id="statTotal">0</div>
@@ -870,11 +829,6 @@
                             紧急任务
                         </div>
                     </div>
-
-                    <button class="btn logout-btn" onclick="logout()">
-                        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        退出登录
-                    </button>
                 </aside>
 
                 <main class="main-content">
@@ -954,126 +908,40 @@
 
     <script>
         const API_BASE = '';
-        let token = localStorage.getItem('token');
         let currentPage = 1;
         let currentFilter = 'all';
 
+        // 本地存储key
+        const STORAGE_KEY = 'tasks';
+
+        // 本地存储方法
+        function getTasks() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveTasks(tasks) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            if (token) showApp();
+            showApp();
             
-            document.querySelectorAll('.auth-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const isLogin = tab.dataset.tab === 'login';
-                    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-                    document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
-                });
-            });
-
-            const regPassword = document.getElementById('regPassword');
-            const passwordStrength = document.getElementById('passwordStrength');
-            const strengthFill = document.getElementById('strengthFill');
-            const strengthText = document.getElementById('strengthText');
-            
-            regPassword.addEventListener('input', () => {
-                const password = regPassword.value;
-                if (password.length > 0) {
-                    passwordStrength.classList.add('active');
-                    let strength = 0;
-                    if (password.length >= 6) strength++;
-                    if (password.length >= 10) strength++;
-                    if (/[A-Z]/.test(password)) strength++;
-                    if (/[0-9]/.test(password)) strength++;
-                    if (/[^A-Za-z0-9]/.test(password)) strength++;
-                    
-                    strengthFill.className = 'strength-fill';
-                    if (strength <= 2) {
-                        strengthFill.classList.add('weak');
-                        strengthText.textContent = '弱 - 请添加更多字符';
-                    } else if (strength <= 3) {
-                        strengthFill.classList.add('medium');
-                        strengthText.textContent = '中 - 可以更强';
-                    } else {
-                        strengthFill.classList.add('strong');
-                        strengthText.textContent = '强 - 密码强度足够';
-                    }
-                } else {
-                    passwordStrength.classList.remove('active');
-                }
-            });
-
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('loginUsername').value;
-                const password = document.getElementById('loginPassword').value;
-                
-                try {
-                    const res = await fetch(API_BASE + '/api/login', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({username, password})
-                    });
-                    
-                    if (!res.ok) {
-                        const data = await res.json();
-                        throw new Error(data.detail || '登录失败');
-                    }
-                    
-                    const data = await res.json();
-                    token = data.access_token;
-                    localStorage.setItem('token', token);
-                    showApp();
-                    showToast('欢迎回来！', 'success');
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
-            });
-
-            document.getElementById('registerForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('regUsername').value;
-                const password = document.getElementById('regPassword').value;
-                const confirmPassword = document.getElementById('regPasswordConfirm').value;
-                
-                if (password !== confirmPassword) {
-                    showToast('两次密码不一致', 'error');
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    showToast('密码至少需要6个字符', 'error');
-                    return;
-                }
-                
-                try {
-                    const res = await fetch(API_BASE + '/api/register', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({username, password})
-                    });
-                    
-                    if (!res.ok) {
-                        const data = await res.json();
-                        throw new Error(data.detail || '注册失败');
-                    }
-                    
-                    showToast('账号创建成功，请登录', 'success');
-                    document.querySelector('[data-tab="login"]').click();
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
-            });
-
+            // 直接使用本地存储，不需要登录
             document.getElementById('taskForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const taskId = document.getElementById('taskId').value;
+                const tasks = getTasks();
+                
                 const task = {
+                    id: taskId || Date.now().toString(),
                     title: document.getElementById('taskTitle').value.trim(),
                     description: document.getElementById('taskDescription').value.trim(),
                     due_date: document.getElementById('taskDueDate').value || null,
-                    priority: document.getElementById('taskPriority').value
+                    priority: document.getElementById('taskPriority').value,
+                    status: 'pending',
+                    created_at: taskId ? tasks.find(t => t.id === taskId)?.created_at : new Date().toISOString()
                 };
                 
                 if (!task.title) {
@@ -1082,23 +950,18 @@
                 }
                 
                 try {
-                    const url = taskId ? `/api/tasks/${taskId}` : '/api/tasks';
-                    const method = taskId ? 'PUT' : 'POST';
-                    
-                    const res = await fetch(API_BASE + url, {
-                        method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify(task)
-                    });
-                    
-                    if (!res.ok) {
-                        const data = await res.json();
-                        throw new Error(data.detail || '保存失败');
+                    if (taskId) {
+                        // 更新
+                        const index = tasks.findIndex(t => t.id === taskId);
+                        if (index !== -1) {
+                            tasks[index] = { ...tasks[index], ...task };
+                        }
+                    } else {
+                        // 新增
+                        tasks.push(task);
                     }
                     
+                    saveTasks(tasks);
                     closeModal();
                     loadTasks();
                     loadStats();
@@ -1128,15 +991,16 @@
 
         async function loadStats() {
             try {
-                const res = await fetch(API_BASE + '/api/stats', {
-                    headers: {'Authorization': 'Bearer ' + token}
-                });
-                const stats = await res.json();
+                const tasks = getTasks();
+                const total = tasks.length;
+                const pending = tasks.filter(t => t.status === 'pending').length;
+                const completed = tasks.filter(t => t.status === 'completed').length;
+                const urgent = tasks.filter(t => t.priority === 'urgent' && t.status === 'pending').length;
                 
-                document.getElementById('statTotal').textContent = stats.total;
-                document.getElementById('statPending').textContent = stats.pending;
-                document.getElementById('statCompleted').textContent = stats.completed;
-                document.getElementById('statUrgent').textContent = stats.urgent;
+                document.getElementById('statTotal').textContent = total;
+                document.getElementById('statPending').textContent = pending;
+                document.getElementById('statCompleted').textContent = completed;
+                document.getElementById('statUrgent').textContent = urgent;
             } catch (err) {
                 console.error('加载统计失败:', err);
             }
@@ -1147,34 +1011,44 @@
             container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             
             try {
-                let status = '';
-                if (currentFilter === 'pending') status = 'pending';
-                else if (currentFilter === 'completed') status = 'completed';
-                else if (currentFilter === 'urgent') status = 'pending';
+                let tasks = getTasks();
                 
-                let priority = document.getElementById('priorityFilter').value;
-                if (currentFilter === 'urgent' && !priority) priority = 'urgent';
+                // 筛选
+                if (currentFilter === 'pending') {
+                    tasks = tasks.filter(t => t.status === 'pending');
+                } else if (currentFilter === 'completed') {
+                    tasks = tasks.filter(t => t.status === 'completed');
+                } else if (currentFilter === 'urgent') {
+                    tasks = tasks.filter(t => t.priority === 'urgent' && t.status === 'pending');
+                }
                 
+                const priorityFilter = document.getElementById('priorityFilter').value;
+                if (priorityFilter) {
+                    tasks = tasks.filter(t => t.priority === priorityFilter);
+                }
+                
+                // 排序
                 const sortBy = document.getElementById('sortBy').value;
                 const order = document.getElementById('order').value;
                 
-                const params = new URLSearchParams({
-                    page: currentPage,
-                    page_size: 10,
-                    sort_by: sortBy,
-                    order: order
+                tasks.sort((a, b) => {
+                    let valA = a[sortBy] || '';
+                    let valB = b[sortBy] || '';
+                    if (sortBy === 'due_date') {
+                        valA = valA ? new Date(valA).getTime() : Infinity;
+                        valB = valB ? new Date(valB).getTime() : Infinity;
+                    }
+                    if (order === 'asc') return valA > valB ? 1 : -1;
+                    return valA < valB ? 1 : -1;
                 });
                 
-                if (status) params.append('status', status);
-                if (priority) params.append('priority', priority);
+                // 分页
+                const pageSize = 10;
+                const totalPages = Math.ceil(tasks.length / pageSize) || 1;
+                const start = (currentPage - 1) * pageSize;
+                const pagedTasks = tasks.slice(start, start + pageSize);
                 
-                const res = await fetch(API_BASE + '/api/tasks?' + params, {
-                    headers: {'Authorization': 'Bearer ' + token}
-                });
-                
-                const data = await res.json();
-                
-                if (data.tasks.length === 0) {
+                if (pagedTasks.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <svg class="empty-icon" viewBox="0 0 24 24">
@@ -1184,7 +1058,7 @@
                         </div>
                     `;
                 } else {
-                    container.innerHTML = data.tasks.map(task => `
+                    container.innerHTML = pagedTasks.map(task => `
                         <div class="task-item">
                             <div class="task-header">
                                 <span class="task-title">${escapeHtml(task.title)}</span>
@@ -1196,18 +1070,18 @@
                                 <span class="task-status ${task.status}">${task.status === 'completed' ? '已完成' : '待完成'}</span>
                             </div>
                             <div class="task-actions">
-                                <button class="btn btn-sm btn-secondary" onclick="editTask(${task.id})">编辑</button>
+                                <button class="btn btn-sm btn-secondary" onclick="editTask('${task.id}')">编辑</button>
                                 <button class="btn btn-sm ${task.status === 'completed' ? 'btn-secondary' : 'btn-primary'}" 
-                                    onclick="toggleStatus(${task.id}, '${task.status}')">
+                                    onclick="toggleStatus('${task.id}', '${task.status}')">
                                     ${task.status === 'completed' ? '重做' : '完成'}
                                 </button>
-                                <button class="btn btn-sm btn-secondary" onclick="deleteTask(${task.id})">删除</button>
+                                <button class="btn btn-sm btn-secondary" onclick="deleteTask('${task.id}')">删除</button>
                             </div>
                         </div>
                     `).join('');
                 }
                 
-                renderPagination(data.total_pages);
+                renderPagination(totalPages);
             } catch (err) {
                 container.innerHTML = `<div class="empty-state"><p class="empty-text">加载失败: ${err.message}</p></div>`;
             }
@@ -1259,10 +1133,13 @@
 
         async function loadTaskForEdit(taskId) {
             try {
-                const res = await fetch(API_BASE + '/api/tasks/' + taskId, {
-                    headers: {'Authorization': 'Bearer ' + token}
-                });
-                const task = await res.json();
+                const tasks = getTasks();
+                const task = tasks.find(t => t.id === taskId);
+                
+                if (!task) {
+                    showToast('任务不存在', 'error');
+                    return;
+                }
                 
                 document.getElementById('taskId').value = task.id;
                 document.getElementById('taskTitle').value = task.title;
@@ -1284,14 +1161,12 @@
             const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
             
             try {
-                await fetch(API_BASE + '/api/tasks/' + taskId, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({status: newStatus})
-                });
+                const tasks = getTasks();
+                const index = tasks.findIndex(t => t.id === taskId);
+                if (index !== -1) {
+                    tasks[index].status = newStatus;
+                    saveTasks(tasks);
+                }
                 
                 loadTasks();
                 loadStats();
@@ -1305,10 +1180,8 @@
             if (!confirm('确定要删除这个任务吗？')) return;
             
             try {
-                await fetch(API_BASE + '/api/tasks/' + taskId, {
-                    method: 'DELETE',
-                    headers: {'Authorization': 'Bearer ' + token}
-                });
+                const tasks = getTasks().filter(t => t.id !== taskId);
+                saveTasks(tasks);
                 
                 loadTasks();
                 loadStats();
