@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理器 - 项目介绍</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --border: #e0e0e0;
+            --border-dark: #333333;
+            --text: #1a1a1a;
+            --text-muted: #666666;
+            --text-light: #999999;
+            --accent: #1a1a1a;
+            --accent-light: #f0f0f0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-hover: 0 4px 16px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-sm: 6px;
+            --radius-lg: 16px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .slides-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+
+        .slide-content {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-dot.active {
+            background: var(--text);
+            transform: scale(1.2);
+        }
+
+        .nav-dot:hover {
+            background: var(--text-muted);
+        }
+
+        .nav-arrows {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+        }
+
+        .nav-arrow {
+            width: 48px;
+            height: 48px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .nav-arrow:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .nav-arrow:hover svg {
+            stroke: var(--surface);
+        }
+
+        .nav-arrow svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .nav-arrow.prev { left: 2rem; }
+        .nav-arrow.next { right: 2rem; }
+
+        .slide-counter {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Slide 1: Cover */
+        .cover-title {
+            font-size: 3.5rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .cover-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+        }
+
+        .cover-line {
+            width: 60px;
+            height: 2px;
+            background: var(--text);
+            margin: 0 auto 3rem;
+        }
+
+        .cover-version {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .cover-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            stroke: var(--text);
+            stroke-width: 1;
+            fill: none;
+        }
+
+        /* Slide 2: Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-dark);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            stroke: var(--text);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Slide 3: Tech Stack */
+        .tech-section {
+            margin-top: 2rem;
+        }
+
+        .tech-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tech-icon {
+            width: 64px;
+            height: 64px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .tech-icon:hover {
+            border-color: var(--border-dark);
+            transform: scale(1.05);
+        }
+
+        .tech-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--text);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .tech-name {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Slide 4: Architecture */
+        .arch-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .arch-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .arch-box.highlight {
+            border-width: 2px;
+            border-color: var(--border-dark);
+        }
+
+        .arch-box-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .arch-box-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .arch-arrow {
+            width: 40px;
+            stroke: var(--border-dark);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .arch-modules {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            justify-content: center;
+        }
+
+        .arch-module {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--accent-light);
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        /* Slide 5: UI Features */
+        .ui-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .ui-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            text-align: left;
+        }
+
+        .ui-feature-icon {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ui-feature-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .ui-feature-content h4 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .ui-feature-content p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Slide 6: Demo */
+        .demo-preview {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .demo-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 1.5rem;
+        }
+
+        .demo-item {
+            text-align: center;
+        }
+
+        .demo-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.25rem;
+        }
+
+        .demo-value {
+            font-size: 1.25rem;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Slide 7: End */
+        .end-title {
+            font-size: 2.5rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .end-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .contact-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* Animations */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .slide.active .fade-up {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide.active .fade-up:nth-child(1) { transition-delay: 0.1s; }
+        .slide.active .fade-up:nth-child(2) { transition-delay: 0.2s; }
+        .slide.active .fade-up:nth-child(3) { transition-delay: 0.3s; }
+        .slide.active .fade-up:nth-child(4) { transition-delay: 0.4s; }
+        .slide.active .fade-up:nth-child(5) { transition-delay: 0.5s; }
+        .slide.active .fade-up:nth-child(6) { transition-delay: 0.6s; }
+
+        /* Section Title */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        /* Keyboard hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .keyboard-hint kbd {
+            padding: 0.2rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .tech-row { flex-wrap: wrap; gap: 1rem; }
+            .ui-features { grid-template-columns: 1fr; }
+            .arch-diagram { flex-direction: column; }
+            .arch-arrow { transform: rotate(90deg); }
+            .cover-title { font-size: 2rem; }
+            .section-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slides-container">
+        <!-- Slide 1: Cover -->
+        <div class="slide active" data-slide="0">
+            <div class="slide-content">
+                <svg class="cover-icon fade-up" viewBox="0 0 24 24">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                    <rect x="9" y="3" width="6" height="4" rx="1"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <line x1="9" y1="16" x2="13" y2="16"/>
+                </svg>
+                <h1 class="cover-title fade-up">任务管理器</h1>
+                <p class="cover-subtitle fade-up">Task Management System</p>
+                <div class="cover-line fade-up"></div>
+                <span class="cover-version fade-up">Version 2.0</span>
+            </div>
+        </div>
+
+        <!-- Slide 2: Features -->
+        <div class="slide" data-slide="1">
+            <div class="slide-content">
+                <h2 class="section-title fade-up">核心功能</h2>
+                <p class="section-subtitle fade-up">Complete Task Management Solution</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <h3 class="feature-title">用户系统</h3>
+                        <p class="feature-desc">安全注册登录<br>JWT 身份验证<br>权限分级管理</p>
+                    </div>
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <h3 class="feature-title">任务管理</h3>
+                        <p class="feature-desc">创建/编辑/删除<br>优先级设置<br>状态跟踪</p>
+                    </div>
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        <h3 class="feature-title">任务提醒</h3>
+                        <p class="feature-desc">截止日期设置<br>到期自动提醒<br>任务可视化</p>
+                    </div>
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <line x1="4" y1="21" x2="4" y2="14"/>
+                            <line x1="4" y1="10" x2="4" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12" y2="3"/>
+                            <line x1="20" y1="21" x2="20" y2="16"/>
+                            <line x1="20" y1="12" x2="20" y2="3"/>
+                            <line x1="1" y1="14" x2="7" y2="14"/>
+                            <line x1="9" y1="8" x2="15" y2="8"/>
+                            <line x1="17" y1="16" x2="23" y2="16"/>
+                        </svg>
+                        <h3 class="feature-title">数据统计</h3>
+                        <p class="feature-desc">任务总数统计<br>完成进度追踪<br>紧急任务提醒</p>
+                    </div>
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                        </svg>
+                        <h3 class="feature-title">筛选排序</h3>
+                        <p class="feature-desc">多维度筛选<br>灵活排序<br>分页浏览</p>
+                    </div>
+                    <div class="feature-card fade-up">
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        <h3 class="feature-title">响应式设计</h3>
+                        <p class="feature-desc">桌面端适配<br>移动端优化<br>跨平台访问</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Tech Stack -->
+        <div class="slide" data-slide="2">
+            <div class="slide-content">
+                <h2 class="section-title fade-up">技术栈</h2>
+                <p class="section-subtitle fade-up">Modern Tech Stack</p>
+                
+                <div class="tech-section">
+                    <div class="tech-row fade-up">
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            </div>
+                            <span class="tech-name">FastAPI</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                            </div>
+                            <span class="tech-name">Uvicorn</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                            </div>
+                            <span class="tech-name">SQLite</span>
+                        </div>
+                    </div>
+                    <div class="tech-row fade-up">
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><path d="M20.2 7.8l-7.7 7.7-4.4-4.4-1.4 1.4 5.8 5.8 9.1-9.1z"/></svg>
+                            </div>
+                            <span class="tech-name">Pydantic</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+                            </div>
+                            <span class="tech-name">JavaScript</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            </div>
+                            <span class="tech-name">HTML5/CSS3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Architecture -->
+        <div class="slide" data-slide="3">
+            <div class="slide-content">
+                <h2 class="section-title fade-up">系统架构</h2>
+                <p class="section-subtitle fade-up">Clean Architecture Design</p>
+                
+                <div class="arch-diagram fade-up">
+                    <div class="arch-box">
+                        <div class="arch-box-title">Frontend</div>
+                        <div class="arch-box-desc">HTML + CSS + JS</div>
+                        <div class="arch-modules">
+                            <span class="arch-module">UI</span>
+                            <span class="arch-module">交互</span>
+                        </div>
+                    </div>
+                    
+                    <svg class="arch-arrow" viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12,5 19,12 12,19"/>
+                    </svg>
+                    
+                    <div class="arch-box highlight">
+                        <div class="arch-box-title">API Layer</div>
+                        <div class="arch-box-desc">FastAPI Routes</div>
+                        <div class="arch-modules">
+                            <span class="auth</span>
+                            <span class="arch-module">tasks</span>
+                            <span class="arch-module">stats</span>
+                        </div>
+                    </div>
+                    
+                    <svg class="arch-arrow" viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12,5 19,12 12,19"/>
+                    </svg>
+                    
+                    <div class="arch-box">
+                        <div class="arch-box-title">Service Layer</div>
+                        <div class="arch-box-desc">Business Logic</div>
+                        <div class="arch-modules">
+                            <span class="arch-module">AuthService</span>
+                            <span class="arch-module">TaskService</span>
+                        </div>
+                    </div>
+                    
+                    <svg class="arch-arrow" viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12,5 19,12 12,19"/>
+                    </svg>
+                    
+                    <div class="arch-box">
+                        <div class="arch-box-title">Data Layer</div>
+                        <div class="arch-box-desc">SQLite Database</div>
+                        <div class="arch-modules">
+                            <span class="arch-module">users</span>
+                            <span class="arch-module">tasks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: UI Features -->
+        <div class="slide" data-slide="4">
+            <div class="slide-content">
+                <h2 class="section-title fade-up">界面特性</h2>
+                <p class="section-subtitle fade-up">Elegant Black & White Design</p>
+                
+                <div class="ui-features">
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>圆润线条风格</h4>
+                            <p>柔和的圆角设计，舒适的视觉体验</p>
+                        </div>
+                    </div>
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>黑白极简配色</h4>
+                            <p>经典黑白搭配，简洁而不简单</p>
+                        </div>
+                    </div>
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>流畅交互动效</h4>
+                            <p>细腻的过渡动画，增强用户体验</p>
+                        </div>
+                    </div>
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>即时反馈提示</h4>
+                            <p>Toast 通知，实时操作反馈</p>
+                        </div>
+                    </div>
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>密码安全增强</h4>
+                            <p>实时强度检测，保障账号安全</p>
+                        </div>
+                    </div>
+                    <div class="ui-feature fade-up">
+                        <div class="ui-feature-icon">
+                            <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </div>
+                        <div class="ui-feature-content">
+                            <h4>响应式布局</h4>
+                            <p>完美适配各种屏幕尺寸</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Demo Info -->
+        <div class="slide" data-slide="5">
+            <div class="slide-content">
+                <h2 class="section-title fade-up">快速体验</h2>
+                <p class="section-subtitle fade-up">Get Started Now</p>
+                
+                <div class="demo-preview fade-up">
+                    <svg width="120" height="80" viewBox="0 0 24 24" fill="none" stroke="#e0e0e0" stroke-width="1">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
+                
+                <div class="demo-info fade-up">
+                    <div class="demo-item">
+                        <div class="demo-label">访问地址</div>
+                        <div class="demo-value">127.0.0.1:30010</div>
+                    </div>
+                    <div class="demo-item">
+                        <div class="demo-label">API 文档</div>
+                        <div class="demo-value">/docs</div>
+                    </div>
+                    <div class="demo-item">
+                        <div class="demo-label">启动命令</div>
+                        <div class="demo-value">python main.py</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: End -->
+        <div class="slide" data-slide="6">
+            <div class="slide-content">
+                <svg class="cover-icon fade-up" viewBox="0 0 24 24" style="width: 60px; height: 60px;">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <h1 class="end-title fade-up">感谢观看</h1>
+                <p class="end-subtitle fade-up">Task Manager - 任务管理器 v2.0</p>
+                <div class="contact-info fade-up">
+                    <div class="contact-item">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <span>项目演示</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-dots">
+            <div class="nav-dot active" data-slide="0"></div>
+            <div class="nav-dot" data-slide="1"></div>
+            <div class="nav-dot" data-slide="2"></div>
+            <div class="nav-dot" data-slide="3"></div>
+            <div class="nav-dot" data-slide="4"></div>
+            <div class="nav-dot" data-slide="5"></div>
+            <div class="nav-dot" data-slide="6"></div>
+        </div>
+
+        <button class="nav-arrow prev" onclick="prevSlide()">
+            <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+        </button>
+        <button class="nav-arrow next" onclick="nextSlide()">
+            <svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+        </button>
+
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">7</span>
+        </div>
+
+        <div class="keyboard-hint">
+            <kbd>←</kbd> <kbd>→</kbd> 切换页面
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 7;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.nav-dot');
+
+        function showSlide(index) {
+            if (index < 0) index = totalSlides - 1;
+            if (index >= totalSlides) index = 0;
+
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i < index) slide.classList.add('prev');
+            });
+            
+            slides[index].classList.add('active');
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+
+            document.getElementById('currentSlide').textContent = index + 1;
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Dot click
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                showSlide(parseInt(dot.dataset.slide));
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Touch swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) nextSlide();
+            if (touchEndX - touchStartX > 50) prevSlide();
+        });
+    </script>
+</body>
+</html>
